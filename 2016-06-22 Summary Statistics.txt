@@ -1,7 +1,0 @@
-||||~ Summary Statistics ||
-||~ Kind ||~ Number ||~ Notes ||
-|| Pages with content || 15637 || All pages that have text on them. ||
-|| Redirects || 4934 || Pages which redirect to a content page. (The content page itself does not necessarily yet exist.) ||
-|| Total existing pages || 20573 || Pages with content plus redirects ||
-|| Pages still needed || 12169 || Pages which are referred to, but which have not yet been created ||
-|| Total references || 208426 || A count of how many links to other pages exist in all existing pages ||
