@@ -9,12 +9,13 @@ log = open("log.txt", "w")
 
 # *****************************************************************
 # Should this filename be ignored?
+# This routine is highly wiki-dependent
 # Return value is either the cleaned filename or None if the file should be ignored.
 def InterestingFilenameRaw(filenameRaw):
 
     if not filenameRaw.startswith("source/"):    # We're only interested in source files
         return None
-    if len(filenameRaw) <= 11:  # There needs to be something there besides 'source/.txt'
+    if len(filenameRaw) <= 11:  # There needs to be something there besides just 'source/.txt'
            return None
 
     # These files are specific to Fancyclopedia and are known to be ignorable
