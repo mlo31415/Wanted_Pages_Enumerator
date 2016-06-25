@@ -68,6 +68,7 @@ for zipEntryName in zipEntryNames:
         continue
 
     countPages += 1
+    nameRaw=WikidotHelpers.ConvertZipBackupCategoryMarker(nameRaw)
     pagesNames.append(WikidotHelpers.Cannonicize(nameRaw)) # Create the list of all cannonicized, interesting names: Both content pages and redirects
 
     # Is this a redirect?

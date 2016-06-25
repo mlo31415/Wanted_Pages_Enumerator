@@ -26,16 +26,18 @@ def CannonicizeString(name):
             inAlpha = False
     return ''.join(out)
 
-# Take a raw name -- mixed case, special characters, a potential category, etc -- and turn it into a proper pair: either <category:name> or just <name>
+# Take a raw name (mixed case, special characters, a potential category, etc.) and turn it into a properly formatted cannonicized name:
+#       Either "<category>:<name>" or, when there is no category, just "<name>"
+#       In both cases, the <> text is cannonicized
 def Cannonicize(zipPageNameRaw):
     if zipPageNameRaw == None:
         return None
     pageName = zipPageNameRaw.lower()
 
-    # Split out the category, if any.  Zipped names have the category as an underscore
-    splitName=pageName.split("_")
+    # Split out the category, if any.
+    splitName=pageName.split(":")
     if len(splitName) > 2:
-        splitName=[splitName[0], " ".join(splitName[1:])]  # Assume first underscore is the category divider.  The rest will eventually be ignored
+        splitName=[splitName[0], " ".join(splitName[1:])]  # Assume first colon is the category divider.  The rest will eventually be ignored
 
     # Handle the case of no category
     if len(splitName) == 1:
@@ -73,10 +75,11 @@ def Uncannonicize(name):
 
 
 # *****************************************************************
-#  Is the page a redirect?  If yes, return the cannonicized redirect; if not, return null
-# A redirect is of the form [[module Redirect destination=""]]
+# Is the page a redirect?  If yes, return the cannonicized redirect; if not, return null
+# A redirect is of the form [[module Redirect destination="<dest>"]]
+# We want to return the cannonicized destination or None if it is not a redirect
 def IsRedirect(pageText):
-    pageText = pageText.strip()  # just to be safe, remove leading and trailing whitespace
+    pageText = pageText.strip()  # Remove leading and trailing whitespace
     if pageText.lower().startswith('[[module redirect destination="') and pageText.endswith('"]]'):
         return Cannonicize(pageText[31:].rstrip('"]'))
     return None
@@ -115,3 +118,10 @@ def ReadPageSourceFromZip(zip, filename):
         print("error: '" + filename + "' read as None")
         exit
     return source
+
+# *****************************************************************
+# Convert the filename in a zipped Wikidot backup (which uses "_" to indicate a category) to use a Wikidot ":" category indicator
+def ConvertZipBackupCategoryMarker(name):
+    if not name.startswith("source/"):  # Only source files can have categories.  (I think.)
+        return name
+    return name.replace("_", ":")
