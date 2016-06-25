@@ -19,11 +19,21 @@ def InterestingFilenameRaw(filenameRaw):
            return None
 
     # These files are specific to Fancyclopedia and are known to be ignorable
-    if filenameRaw.startswith("source/index_people"):  # Pages with names "source/index_people..." are index pages, not content pages.
+    if filenameRaw.startswith("source/deleted_"):   # Ignore deleted pages
         return None
-    if filenameRaw.startswith("source/index_alphanumeric"):  # Likewise
+    if filenameRaw.startswith("source/nav_"):   # Ignore navigation pages
         return None
-    if filenameRaw.startswith("source/testing_alphanumeric"):  # Likewise
+    if filenameRaw.startswith("source/forum_"):   # Ignore forum pages
+        return None
+    if filenameRaw.startswith("source/testing_"):   # These are test pages of various sorts
+        return None
+    if filenameRaw.startswith("source/system_"):   # Ignore system pages
+        return None
+    if filenameRaw.startswith("source/admin_"):   # Ignore system admin pages
+        return None
+    if filenameRaw.startswith("source/search_"):   # Ignore system search pages
+        return None
+    if filenameRaw.startswith("source/index_"):   # Ignore our index pages
         return None
 
     return filenameRaw[7:-4]  # Drop "source/" and ".txt", returning the cleaned name
@@ -111,6 +121,8 @@ for zipEntryName in zipEntryNames:
         if ref[0] != None and len(ref) > 0: # The part we want ("<reference>" from the comment above) will be in ref[0].  Make sure it exists.
             if ref[0].find("|") > 0:    # Look for references containing "|".  These are of the form <reference name>|<display name>.  We want just the reference name.
                 ref[0]=ref[0][:ref[0].find("|")]
+            if ref[0].find("http:") > 0:    # We don't want references which are actually outside Wikidot
+                continue
             refCan=WikidotHelpers.Cannonicize(ref[0])
             refs.append(refCan)
             WikidotHelpers.AddUncannonicalName(ref[0], refCan)
