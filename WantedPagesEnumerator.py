@@ -111,6 +111,15 @@ for zipEntryName in zipEntryNames:
 
     # We need to find all the references in the page.  A reference is a string inside a pair of triple square brackets, i.e., [[[string]]]
     # We'll start by spliting the page on "[[[". This will yield a list of strings, each starting with a reference which ends with "]]]", usually followed by junk.
+
+    # Step #1 is to deal (crudely for now) with the case of "[[[[" which is "[" followed by "[[[". Ideally, we'd handle any number of successive "["s,
+    # but the actual data only has "[[[[" and it's not clear what longer sequences would mean, anyway.
+    # So for now, we'll kludge it by turning the "extra" '[' into a parenthesis.
+    # Ditto for ']'
+    source.replace("[[[[", "([[[")
+    source.replace("]]]]", "]]])")
+
+    # Now locate the "[[[<reference>]]]" sequences
     splitSource = source.split("[[[")
     refs = []       # Refs will be a list of all the references found in this source page
     for r in splitSource:
