@@ -11,32 +11,32 @@ log = open("log.txt", "w")
 # Should this filename be ignored?
 # This routine is highly wiki-dependent
 # Return value is either the cleaned filename or None if the file should be ignored.
-def InterestingFilenameRaw(filenameRaw):
+def InterestingFilenameZip(filenameZip):
 
-    if not filenameRaw.startswith("source/"):    # We're only interested in source files
+    if not filenameZip.startswith("source/"):    # We're only interested in source files
         return None
-    if len(filenameRaw) <= 11:  # There needs to be something there besides just 'source/.txt'
+    if len(filenameZip) <= 11:  # There needs to be something there besides just 'source/.txt'
            return None
 
     # These files are specific to Fancyclopedia and are known to be ignorable
-    if filenameRaw.startswith("source/deleted_"):   # Ignore deleted pages
+    if filenameZip.startswith("source/deleted_"):   # Ignore deleted pages
         return None
-    if filenameRaw.startswith("source/nav_"):   # Ignore navigation pages
+    if filenameZip.startswith("source/nav_"):   # Ignore navigation pages
         return None
-    if filenameRaw.startswith("source/forum_"):   # Ignore forum pages
+    if filenameZip.startswith("source/forum_"):   # Ignore forum pages
         return None
-    if filenameRaw.startswith("source/testing_"):   # These are test pages of various sorts
+    if filenameZip.startswith("source/testing_"):   # These are test pages of various sorts
         return None
-    if filenameRaw.startswith("source/system_"):   # Ignore system pages
+    if filenameZip.startswith("source/system_"):   # Ignore system pages
         return None
-    if filenameRaw.startswith("source/admin_"):   # Ignore system admin pages
+    if filenameZip.startswith("source/admin_"):   # Ignore system admin pages
         return None
-    if filenameRaw.startswith("source/search_"):   # Ignore system search pages
+    if filenameZip.startswith("source/search_"):   # Ignore system search pages
         return None
-    if filenameRaw.startswith("source/index_"):   # Ignore our index pages
+    if filenameZip.startswith("source/index_"):   # Ignore our index pages
         return None
 
-    return filenameRaw[7:-4]  # Drop "source/" and ".txt", returning the cleaned name
+    return filenameZip[7:-4]  # Drop "source/" and ".txt", returning the cleaned name
 
 
 # *****************************************************************
@@ -45,10 +45,10 @@ def InterestingFilenameRaw(filenameRaw):
 # Navigate to zipped backup file to be analyzed, open it, and read it
 root = tk.Tk()
 root.withdraw()
-file_path = filedialog.askopenfilename()
-if not zipfile.is_zipfile(file_path):
+zipFilepath = filedialog.askopenfilename()
+if not zipfile.is_zipfile(zipFilepath):
     exit()
-zip = zipfile.ZipFile(file_path)
+zip = zipfile.ZipFile(zipFilepath)
 
 # redirects is a dictionary of redirects.  The key is a cannonicized name, the value is the cannonicized name that it is redirected to.
 redirects = {}
@@ -60,22 +60,22 @@ pagesNames=[]       # List of cannonicized page names
 # Walk through the zip file, looking only at source pages.
 zipEntryNames = zip.namelist()
 for zipEntryName in zipEntryNames:
-    nameRaw=InterestingFilenameRaw(zipEntryName)
-    if nameRaw == None:
+    nameZip=InterestingFilenameZip(zipEntryName)
+    if nameZip == None:
         continue
     source = WikidotHelpers.ReadPageSourceFromZip(zip, zipEntryName)
     if source == None:
         continue
 
     countPages += 1
-    nameRaw=WikidotHelpers.ConvertZipBackupCategoryMarker(nameRaw)
-    pagesNames.append(WikidotHelpers.Cannonicize(nameRaw)) # Create the list of all cannonicized, interesting names: Both content pages and redirects
+    nameZip=WikidotHelpers.ConvertZipCategoryMarker(nameZip)
+    pagesNames.append(WikidotHelpers.Cannonicize(nameZip)) # Create the list of all cannonicized, interesting names: Both content pages and redirects
 
     # Is this a redirect?
     redir = WikidotHelpers.IsRedirect(source)
     if redir != None:
         # If so, add it to the redirect dictionary (remember to remove the extension!)
-        name=WikidotHelpers.Cannonicize(nameRaw)
+        name=WikidotHelpers.Cannonicize(nameZip)
         if name == redir:  # Skip circular redirects
             continue
         redirects[name] = redir
@@ -96,7 +96,7 @@ pagesRefs = {}  # The dictionary of pages, each holding a list of references for
 refsPages = {}  # The dictionary of references, each holding a list of pages that reference it
 countContentPages=0
 for zipEntryName in zipEntryNames:
-    uncanName=InterestingFilenameRaw(zipEntryName)
+    uncanName=InterestingFilenameZip(zipEntryName)
     name=WikidotHelpers.Cannonicize(uncanName)
     if name == None:
         continue

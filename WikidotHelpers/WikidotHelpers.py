@@ -29,10 +29,10 @@ def CannonicizeString(name):
 # Take a raw name (mixed case, special characters, a potential category, etc.) and turn it into a properly formatted cannonicized name:
 #       Either "<category>:<name>" or, when there is no category, just "<name>"
 #       In both cases, the <> text is cannonicized
-def Cannonicize(zipPageNameRaw):
-    if zipPageNameRaw == None:
+def Cannonicize(pageNameZip):
+    if pageNameZip == None:
         return None
-    pageName = zipPageNameRaw.lower()
+    pageName = pageNameZip.lower()
 
     # Split out the category, if any.
     splitName=pageName.split(":")
@@ -88,29 +88,29 @@ def IsRedirect(pageText):
 # *****************************************************************
 # Should this filename be ignored?
 # Return value is either the cleaned filename or None if the file should be ignored.
-def InterestingFilenameRaw(filenameRaw):
+def InterestingFilenameZip(filenameZip):
 
-    if not filenameRaw.startswith("source/"):    # We're only interested in source files
+    if not filenameZip.startswith("source/"):    # We're only interested in source files
         return None
-    if len(filenameRaw) <= 11:  # There needs to be something there besides 'source/.txt'
+    if len(filenameZip) <= 11:  # There needs to be something there besides 'source/.txt'
            return None
 
     # These files are specific to Fancyclopedia and are known to be ignorable
-    if filenameRaw.startswith("source/index_people"):  # Pages with names "source/index_people..." are index pages, not content pages.
+    if filenameZip.startswith("source/index_people"):  # Pages with names "source/index_people..." are index pages, not content pages.
         return None
-    if filenameRaw.startswith("source/index_alphanumeric"):  # Likewise
+    if filenameZip.startswith("source/index_alphanumeric"):  # Likewise
         return None
-    if filenameRaw.startswith("source/testing_alphanumeric"):  # Likewise
+    if filenameZip.startswith("source/testing_alphanumeric"):  # Likewise
         return None
 
-    return filenameRaw[7:-4]  # Drop "source/" and ".txt", returning the cleaned name
+    return filenameZip[7:-4]  # Drop "source/" and ".txt", returning the cleaned name
 
 
 # *****************************************************************
 # Read a source file from a zipped Wikidot backup
 def ReadPageSourceFromZip(zip, filename):
 
-    if InterestingFilenameRaw(filename) == None:
+    if InterestingFilenameZip(filename) == None:
         return None
 
     source = zip.read(filename).decode("utf-8")
@@ -121,7 +121,7 @@ def ReadPageSourceFromZip(zip, filename):
 
 # *****************************************************************
 # Convert the filename in a zipped Wikidot backup (which uses "_" to indicate a category) to use a Wikidot ":" category indicator
-def ConvertZipBackupCategoryMarker(name):
+def ConvertZipCategoryMarker(name):
     if not name.startswith("source/"):  # Only source files can have categories.  (I think.)
         return name
     return name.replace("_", ":")
