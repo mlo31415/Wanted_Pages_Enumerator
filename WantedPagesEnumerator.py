@@ -42,7 +42,7 @@ def InterestingFilenameZip(filenameZip):
 # *****************************************************************
 # *****************************************************************
 # Main
-# Navigate to zipped backup file to be analyzed, open it, and read it
+# Navigate to the zipped backup file which is to be analyzed, open it, and read it
 root = tk.Tk()
 root.withdraw()
 zipFilepath = filedialog.askopenfilename()
@@ -50,12 +50,8 @@ if not zipfile.is_zipfile(zipFilepath):
     exit()
 zip = zipfile.ZipFile(zipFilepath)
 
-# redirects is a dictionary of redirects.  The key is a cannonicized name, the value is the cannonicized name that it is redirected to.
-redirects = {}
-
-pageChildren = {}   # Dictionary of pageChildren. The key is the cannonicized page name. The value is a list of cannonicized pages referred to on that page
+redirects = {}      # Dictionary of redirects.  The key is a cannonicized name, the value is the cannonicized name that it is ultimately redirected to.
 countPages=0        # Count of all pages with content, including redirects
-pagesNames=[]       # List of cannonicized page names
 
 # Walk through the zip file, looking only at source pages.
 zipEntryNames = zip.namelist()
@@ -68,45 +64,50 @@ for zipEntryName in zipEntryNames:
         continue
 
     countPages += 1
-    nameZip=WikidotHelpers.ConvertZipCategoryMarker(nameZip)
-    pagesNames.append(WikidotHelpers.Cannonicize(nameZip)) # Create the list of all cannonicized, interesting names: Both content pages and redirects
+    nameZip=WikidotHelpers.ConvertZipCategoryMarker(nameZip)    # Convert the Zip category marker to the Wikidot category marker
 
     # Is this a redirect?
     redir = WikidotHelpers.IsRedirect(source)
     if redir != None:
-        # If so, add it to the redirect dictionary (remember to remove the extension!)
+        # If so, add it to the redirect dictionary
         name=WikidotHelpers.Cannonicize(nameZip)
         if name == redir:  # Skip circular redirects
+            print("Warning: '"+name+" is a circular redirect reference", file=log)
+            print("Warning: '" + name + " is a circular redirect reference")
             continue
         redirects[name] = redir
         continue
 
 countRedirects=len(redirects)
-countPages=len(pagesNames)
-# Now we need to trace all the redirect chains  and make sure that every redirect points to the end of its chain.
-# I.e., right now we have a->b, b->c.  We want this to be a->c and b->c.
+
+# Now that we've analyzed the entire zip file, we need to trace all the redirect chains and make sure that every redirect points to the ultimate end of its chain.
+# I.e., right now we have many instances of a->b, b->c (or even longer).  We want this to be a->c and b->c.
 for n in redirects:
     while redirects.get(redirects[n]) != None:  # Is the page we're redirecting to also a redirect?
         redirects[n] = redirects[redirects[n]]
 
 print("Redirects analysis complete: redirects.len=", countRedirects)
 
-# Next we go through the *non*-redirect pages and create a list of their references
+# Next we go through the *non*-redirect pages and create a list of their references and the inverse list of the referring pages
 pagesRefs = {}  # The dictionary of pages, each holding a list of references for that page
 refsPages = {}  # The dictionary of references, each holding a list of pages that reference it
+pagesNames=[]       # List of cannonicized page names, both content pages and redirects
 countContentPages=0
 for zipEntryName in zipEntryNames:
-    uncanName=InterestingFilenameZip(zipEntryName)
-    name=WikidotHelpers.Cannonicize(uncanName)
+    nameZip=InterestingFilenameZip(zipEntryName)
+    name=WikidotHelpers.Cannonicize(nameZip)
     if name == None:
         continue
     if redirects.get(name) != None:  # Skip redirects
         continue
 
-    # Load the page source
+    pagesNames.append(name)  # Add it to the list of all cannonicized, interesting names
+
+    # Load the page's source
     source = WikidotHelpers.ReadPageSourceFromZip(zip, zipEntryName)  # Skip empty pages
     if source == None or len(source) == 0:
-        print("error: Page '"+zipEntryName+"' is empty.", file=log)
+        print("Warning: Page '"+zipEntryName+"' is empty.", file=log)
+        print("Warning: Page '"+zipEntryName+"' is empty.")
         continue
 
     # We need to find all the references in the page.  A reference is a string inside a pair of triple square brackets, i.e., [[[string]]]
@@ -139,7 +140,7 @@ for zipEntryName in zipEntryNames:
 
     countContentPages += 1
 
-    # Take all the references we've collected from this source page, make sure any redirects are followed, and update the refPages dict.
+    # Take all the references we've collected from this source page, make sure any redirects are followed through to the end, and update the refPages dict.
     # RefsPages[name] contains a list of all pages which refer *to* the source pages "name".
     rrefs = []
     for r in refs:  # r is a reference to another page contained in page n
@@ -155,7 +156,7 @@ for zipEntryName in zipEntryNames:
     # PagesRefs[name], OTOH, contains a list of all pages referred to by source page "name"
     pagesRefs[name] = rrefs
 
-print("Source reference analysis complete:", len(pagesRefs), "pages found with references")
+print("Source reference analysis complete: ", len(pagesRefs), " pages found with references")
 
 # We now have a list of all content pages and each of those pages has a list of pages referenced
 # We want to gather some statistics and make some lists of interesting pages:
