@@ -83,7 +83,13 @@ countRedirects=len(redirects)
 # Now that we've analyzed the entire zip file, we need to trace all the redirect chains and make sure that every redirect points to the ultimate end of its chain.
 # I.e., right now we have many instances of a->b, b->c (or even longer).  We want this to be a->c and b->c.
 for n in redirects:
+    redirectPath={}     # Used to check for redirect loops
     while redirects.get(redirects[n]) != None:  # Is the page we're redirecting to also a redirect?
+        if redirectPath.get(redirects[n]) != None:  # Has the redirect list looped?
+            print("ERROR: '" + n +"' is a redirect in a redirect loop")
+            print("ERROR: '" + n + "' is a redirect in a redirect loop", file=log)
+            break
+        redirectPath[redirects[n]]=True
         redirects[n] = redirects[redirects[n]]
 
 print("Redirects analysis complete: redirects.len=", countRedirects)
@@ -151,8 +157,9 @@ for zipEntryName in zipEntryNames:
             rrefs.append(redirects[r])
 
         if pagesBacklinks.get(r) == None:
-            pagesBacklinks[r]=[]
-        pagesBacklinks[r].append(name)
+            pagesBacklinks[r]={}
+        if pagesBacklinks[r].get(name) == None:
+            pagesBacklinks[r][name]=True
 
     # PagesRefs[name], OTOH, contains a list of all pages referred to by source page "name"
     pagesRefs[name] = rrefs
@@ -274,7 +281,17 @@ for name in missingPages:
         continue
     for link in pagesBacklinks[name]:
         line=line+link +", "
-    print(line, file=file)
+    try:                            # This double-try scheme is to deal foreign characters in, first referring pages, and then missing pages
+        print(line, file=file)
+    except UnicodeEncodeError:
+        try:
+            print("ERROR: '" + name + "' has a referring page which caused a UnicodeEncodeError")
+            print("ERROR: '" + name + "' has a referring page which caused a UnicodeEncodeError", file=log)
+        except UnicodeEncodeError:
+            print("ERROR: a missing page's name caused a UnicodeEncodeError")
+            print("ERROR: a missing page's name caused a UnicodeEncodeError", file=log)
+            continue
+
 file.close()
 
 # Print the list of all references
