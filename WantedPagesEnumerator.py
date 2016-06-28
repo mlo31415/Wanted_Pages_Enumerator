@@ -6,6 +6,11 @@ import WikidotHelpers.WikidotHelpers as WikidotHelpers
 
 log = open("log.txt", "w")
 
+def logger(message):
+    print(message, file=log)
+    print(message)
+
+
 
 # *****************************************************************
 # Should this filename be ignored?
@@ -72,8 +77,7 @@ for zipEntryName in zipEntryNames:
         # If so, add it to the redirect dictionary
         name=WikidotHelpers.Cannonicize(nameZip)
         if name == redir:  # Skip circular redirects
-            print("Warning: '"+name+" is a circular redirect reference", file=log)
-            print("Warning: '" + name + " is a circular redirect reference")
+            logger("Warning: '" + name + " is a circular redirect reference")
             continue
         redirects[name] = redir
         continue
@@ -86,13 +90,12 @@ for n in redirects:
     redirectPath={}     # Used to check for redirect loops
     while redirects.get(redirects[n]) != None:  # Is the page we're redirecting to also a redirect?
         if redirectPath.get(redirects[n]) != None:  # Has the redirect list looped?
-            print("ERROR: '" + n +"' is a redirect in a redirect loop")
-            print("ERROR: '" + n + "' is a redirect in a redirect loop", file=log)
+            logger("ERROR: '" + n +"' is a redirect in a redirect loop")
             break
         redirectPath[redirects[n]]=True
         redirects[n] = redirects[redirects[n]]
 
-print("Redirects analysis complete: redirects.len=", countRedirects)
+logger("Redirects analysis complete: redirects.len=" + str(countRedirects))
 
 # Next we go through the *non*-redirect pages and create a list of their references and the inverse list of the referring pages
 pagesRefs = {}      # The dictionary of pages, indexed by the name of a page and holding a list of references on that page
@@ -113,8 +116,7 @@ for zipEntryName in zipEntryNames:
     # Load the page's source
     source = WikidotHelpers.ReadPageSourceFromZip(zip, zipEntryName)  # Skip empty pages
     if source == None or len(source) == 0:
-        print("Warning: Page '"+zipEntryName+"' is empty.", file=log)
-        print("Warning: Page '"+zipEntryName+"' is empty.")
+        logger("Warning: Page '"+zipEntryName+"' is empty.")
         continue
 
     # We need to find all the references in the page.  A reference is a string inside a pair of triple square brackets, i.e., [[[string]]]
@@ -142,8 +144,7 @@ for zipEntryName in zipEntryNames:
             if ref[0].find("|") > 0:    # Look for references containing "|".  These are of the form <reference name>|<display name>.  We want just the reference name.
                 ref[0]=ref[0][:ref[0].find("|")]
             if ref[0].find("http:") > 0:    # We don't want references which are actually outside Wikidot
-                print("Warning: '" + name + "' contains an empty reference")
-                print("Warning: '" + name + "' contains an empty reference", file=log)
+                logger("Warning: '" + name + "' contains an empty reference")
                 continue
             refCan=WikidotHelpers.Cannonicize(ref[0])
             rawPageRefs.append(refCan)
@@ -168,7 +169,7 @@ for zipEntryName in zipEntryNames:
     # PagesRefs[name], OTOH, contains a list of all pages referred to by source page "name"
     pagesRefs[name] = resolvedPageRefs
 
-print("Source reference analysis complete: ", len(pagesRefs), " pages found with references")
+logger("Source reference analysis complete: " + str(len(pagesRefs)) + " pages found with references")
 
 # We now have a list of all content pages and each of those pages has a list of pages referenced
 # We want to gather some statistics and make some lists of interesting pages:
@@ -183,7 +184,7 @@ print("Source reference analysis complete: ", len(pagesRefs), " pages found with
 # Create the list of missing pages
 for name in existingPages:
     if pagesRefs.get(name) == None:
-        print("Warning: '"+name+"' is in existingPages, but is not in pageRefs")
+        logger("Warning: '"+name+"' is in existingPages, but is not in pageRefs")
         continue
     for ref in pagesRefs[name]:
         if existingPages.get(ref) == None:
@@ -279,21 +280,28 @@ file.close()
 # Next we create a list of missing pages and where they're referenced
 file=open(day+" All Missing References.txt", "w")
 for name in missingPages:
-    line=name+ " <--- "
     if pagesBacklinks.get(name) == None:
-        print("Warning: '"+name+"' is in missingPages but is not in pagesBacklinks")
+        found=False
+        for r in redirects:
+            if redirects[r] == name:
+                found=True
+                break
+        if found:
+            logger("Warning: '" + name + "' does not exist and is referred to only by an unused redirect")
+        else:
+            logger("Warning: '" + name + "' is in missingPages but is not in pagesBacklinks")
         continue
+
+    line=name+ " <--- "
     for link in pagesBacklinks[name]:
         line=line+link +", "
     try:                            # This double-try scheme is to deal foreign characters in, first referring pages, and then missing pages
         print(line, file=file)
     except UnicodeEncodeError:
         try:
-            print("ERROR: '" + name + "' has a referring page which caused a UnicodeEncodeError")
-            print("ERROR: '" + name + "' has a referring page which caused a UnicodeEncodeError", file=log)
+            logger("ERROR: '" + name + "' has a referring page which caused a UnicodeEncodeError")
         except UnicodeEncodeError:
-            print("ERROR: a missing page's name caused a UnicodeEncodeError")
-            print("ERROR: a missing page's name caused a UnicodeEncodeError", file=log)
+            logger("ERROR: a missing page's name caused a UnicodeEncodeError")
             continue
 
 file.close()
