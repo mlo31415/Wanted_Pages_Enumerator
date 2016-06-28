@@ -129,32 +129,36 @@ for zipEntryName in zipEntryNames:
 
     # Now locate the "[[[<reference>]]]" sequences
     splitSource = source.split("[[[")
-    refs = []       # Refs will be a list of all the references found in this source page
+    rawPageRefs = []       # Refs will be a list of all the references found in this source page
     for r in splitSource:
         if r.find("]]]") < 1:   # If the string doesn't contain reference closing brackets ("]]]"), then it's a leading string of junk which must be skipped.
             continue
         ref = r.split("]]]")    # If it does contain "]]]", then there's a reference to be found.  The format of the string is <reference>]]]<trailing stuff>.
-        if ref == None or len(ref) <= 1:    # If there's nothing to be found, skip it.
+        if ref == None:         # If there's nothing to be found, skip it.
+            continue
+        if len(ref) < 1:        # A null reference
             continue
         if ref[0] != None and len(ref) > 0: # The part we want ("<reference>" from the comment above) will be in ref[0].  Make sure it exists.
             if ref[0].find("|") > 0:    # Look for references containing "|".  These are of the form <reference name>|<display name>.  We want just the reference name.
                 ref[0]=ref[0][:ref[0].find("|")]
             if ref[0].find("http:") > 0:    # We don't want references which are actually outside Wikidot
+                print("Warning: '" + name + "' contains an empty reference")
+                print("Warning: '" + name + "' contains an empty reference", file=log)
                 continue
             refCan=WikidotHelpers.Cannonicize(ref[0])
-            refs.append(refCan)
+            rawPageRefs.append(refCan)
             WikidotHelpers.AddUncannonicalName(ref[0], refCan)
 
     countContentPages += 1
 
     # Take all the references we've collected from this source page, make sure any redirects are followed through to the end, and update the refPages dict.
     # RefsPages[name] contains a list of all pages which refer *to* the source pages "name".
-    rrefs = []
-    for r in refs:  # r is a reference to another page contained in page n
+    resolvedPageRefs = []
+    for r in rawPageRefs:  # r is a reference to another page contained in page n
         if redirects.get(r) == None:    # Make sure each ref is fully redirected
-            rrefs.append(r)
+            resolvedPageRefs.append(r)
         else:
-            rrefs.append(redirects[r])
+            resolvedPageRefs.append(redirects[r])
 
         if pagesBacklinks.get(r) == None:
             pagesBacklinks[r]={}
@@ -162,7 +166,7 @@ for zipEntryName in zipEntryNames:
             pagesBacklinks[r][name]=True
 
     # PagesRefs[name], OTOH, contains a list of all pages referred to by source page "name"
-    pagesRefs[name] = rrefs
+    pagesRefs[name] = resolvedPageRefs
 
 print("Source reference analysis complete: ", len(pagesRefs), " pages found with references")
 
