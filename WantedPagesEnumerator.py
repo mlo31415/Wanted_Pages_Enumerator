@@ -89,9 +89,10 @@ for n in redirects:
 print("Redirects analysis complete: redirects.len=", countRedirects)
 
 # Next we go through the *non*-redirect pages and create a list of their references and the inverse list of the referring pages
-pagesRefs = {}  # The dictionary of pages, each holding a list of references for that page
-refsPages = {}  # The dictionary of references, each holding a list of pages that reference it
-pagesNames=[]       # List of cannonicized page names, both content pages and redirects
+pagesRefs = {}      # The dictionary of pages, indexed by the name of a page and holding a list of references on that page
+pagesBacklinks = {} # The dictionary of references, indexed by the name of a page and holding a list of pages that reference it
+existingPages={}    # A dictionary of all cannonicized names of existing, both content pages and redirects.  There will be an entry for each existing page (this allows easy lookup)
+missingPages={}     # A dictionary of cannonicized names of pages which are referenced, but which do not exist.   There will be an entry for each existing page (this allows easy lookup)
 countContentPages=0
 for zipEntryName in zipEntryNames:
     nameZip=InterestingFilenameZip(zipEntryName)
@@ -101,7 +102,7 @@ for zipEntryName in zipEntryNames:
     if redirects.get(name) != None:  # Skip redirects
         continue
 
-    pagesNames.append(name)  # Add it to the list of all cannonicized, interesting names
+    existingPages[name] = True  # Add it to the list of all cannonicized, interesting names
 
     # Load the page's source
     source = WikidotHelpers.ReadPageSourceFromZip(zip, zipEntryName)  # Skip empty pages
@@ -149,9 +150,9 @@ for zipEntryName in zipEntryNames:
         else:
             rrefs.append(redirects[r])
 
-        if refsPages.get(r) == None:
-            refsPages[r]=[]
-        refsPages[r].append(name)
+        if pagesBacklinks.get(r) == None:
+            pagesBacklinks[r]=[]
+        pagesBacklinks[r].append(name)
 
     # PagesRefs[name], OTOH, contains a list of all pages referred to by source page "name"
     pagesRefs[name] = rrefs
@@ -168,10 +169,19 @@ print("Source reference analysis complete: ", len(pagesRefs), " pages found with
 # * List of all missing pages references 10 or more times
 # * List of most referenced pages
 
+# Create the list of missing pages
+for name in existingPages:
+    if pagesRefs.get(name) == None:
+        print("Warning: '"+name+"' is in existingPages, but is not in pageRefs")
+        continue
+    for ref in pagesRefs[name]:
+        if existingPages.get(ref) == None:
+            missingPages[ref]=True
+
 # We need to count the number of references each page has.
 countTotalRefs = 0
 countRefs = {}  # A dictionary of pages with reference counts for that page
-for name in pagesNames:
+for name in existingPages:
     if pagesRefs.get(name) != None:
         for r in pagesRefs[name]:
             if countRefs.get(r) == None:
@@ -190,7 +200,7 @@ print("||~ Kind ||~ Number ||~ Notes ||", file=file)
 print("|| Pages with content ||", countContentPages, "|| All pages that have text on them. ||", file=file)
 print("|| Redirects ||", countRedirects, "|| Pages which redirect to a content page. (The content page itself does not necessarily yet exist.) ||", file=file)
 print("|| Total existing pages ||", countPages, "|| Pages with content plus redirects ||", file=file)
-print("|| Pages still needed ||", len(refsPages)-countContentPages-countRedirects, "|| Pages which are referred to, but which have not yet been created ||", file=file)
+print("|| Pages still needed ||", len(pagesBacklinks) - countContentPages - countRedirects, "|| Pages which are referred to, but which have not yet been created ||", file=file)
 print("|| Total references ||", countTotalRefs, "|| A count of how many links to other pages exist in all existing pages ||", file=file)
 file.close()
 
@@ -228,18 +238,18 @@ file.close()
 file=open(day+" Most Wanted Pages.txt", "w")
 
 # Go through the dictionary and copy just the tuples missing pages.
-missingPages=[]
+missingPagesTuples=[]
 for crt in countRefTuples:
-    if pagesRefs.get(crt[0]) == None:
-        missingPages.append(crt)
+    if existingPages.get(crt[0]) == None:
+        missingPagesTuples.append(crt)
 
 # Sort what's left
-missingPages.sort(key=lambda n: n[1], reverse=True)
+missingPagesTuples.sort(key=lambda n: n[1], reverse=True)
 
 # We generate one line in the table for each *value* of reference count (i.e., all pages with 50 references are listed in a single row of the table.)
 currentNum=-1
 line=""
-for mp in missingPages:
+for mp in missingPagesTuples:
     if mp[1] != currentNum:
         if len(line)>0:
             print("||", currentNum, "||", line, "||", file=file)
@@ -255,9 +265,21 @@ for mp in missingPages:
 
 file.close()
 
+# Next we create a list of missing pages and where they're referenced
+file=open(day+" All Missing References.txt", "w")
+for name in missingPages:
+    line=name+ " <--- "
+    if pagesBacklinks.get(name) == None:
+        print("Warning: '"+name+"' is in missingPages but is not in pagesBacklinks")
+        continue
+    for link in pagesBacklinks[name]:
+        line=line+link +", "
+    print(line, file=file)
+file.close()
+
 # Print the list of all references
 file=open(day+" Pages.txt", "w")
-for name in pagesNames:
+for name in existingPages:
     print(WikidotHelpers.Uncannonicize(name), file=file)
 file.close()
 
