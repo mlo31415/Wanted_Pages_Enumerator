@@ -3,6 +3,9 @@ from tkinter import filedialog
 import zipfile
 import time
 import WikidotHelpers.WikidotHelpers as WikidotHelpers
+#TODO: Need to deal with accented letter (e.g. Farmer)
+#TODO: Need to deal with embedded hyperlinks (e.g., Ansible)
+#TODO: Need to deal with ALL-CAPS (are we ignoring all of the pages we ought to be?)
 
 log = open("log.txt", "w")
 
@@ -39,6 +42,8 @@ def InterestingFilenameZip(filenameZip):
     if filenameZip.startswith("source/search_"):   # Ignore system search pages
         return None
     if filenameZip.startswith("source/index_"):   # Ignore our index pages
+        return None
+    if filenameZip.startswith("most-wanted-pages"): # Ignore the *previous* most-wanted-pages page
         return None
 
     return filenameZip[7:-4]  # Drop "source/" and ".txt", returning the cleaned name

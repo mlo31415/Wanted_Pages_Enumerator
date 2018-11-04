@@ -26,10 +26,11 @@ def CannonicizeString(name):
             inAlpha = False
     # Remove any leading or trailing "-"
     canname=''.join(out)
-    if canname[0] == "-":
-        canname=canname[1:]
-    if canname[:-1] == "-":
-        canname=canname[:-1]
+    if len(canname) > 1:
+        if canname[0] == "-":
+            canname=canname[1:]
+        if canname[:-1] == "-":
+            canname=canname[:-1]
     return canname
 
 # Take a raw name (mixed case, special characters, a potential category, etc.) and turn it into a properly formatted cannonicized name:
