@@ -43,7 +43,7 @@ def InterestingFilenameZip(filenameZip):
         return None
     if filenameZip.startswith("source/index_"):   # Ignore our index pages
         return None
-    if filenameZip.startswith("most-wanted-pages"): # Ignore the *previous* most-wanted-pages page
+    if filenameZip.startswith("source/most-wanted-pages"): # Ignore the *previous* most-wanted-pages page
         return None
 
     return filenameZip[7:-4]  # Drop "source/" and ".txt", returning the cleaned name
