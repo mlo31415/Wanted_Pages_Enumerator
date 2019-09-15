@@ -11,10 +11,17 @@ cannonicalToReal = {}   # A dictionary which lets us go from cannonical names ba
 # We need to convert a string to Wikidot's cannonical form: All lower case; All spans of special characters reduced to a hyphen; No leading ro trailing hyphens.
 # The strategy is to iterate through the name, copying characters to a list of characters which is later merged into the return string. (Appending to a string is too expensive.)
 def CannonicizeString(name):
+    funnyForeignCharacters={"é" : "e",
+                            "É" : "E",
+                            "ë" : "e",
+                            "Ó" : "O",
+                            "è" : "e"}
     out = []
     inAlpha = False
     inJunk = False
     for c in name:
+        if c in funnyForeignCharacters.keys():
+            c=funnyForeignCharacters[c]
         if c.isalnum() or c == ':':     # ":", the category separator, is an honorary alphanumeric
             if inJunk:
                 out.append("-")
