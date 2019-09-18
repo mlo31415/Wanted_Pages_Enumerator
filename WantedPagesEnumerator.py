@@ -45,6 +45,10 @@ def InterestingFilenameZip(filenameZip):
         return None
     if filenameZip.startswith("source/most-wanted-pages"): # Ignore the *previous* most-wanted-pages page
         return None
+    bars=["conbar1", "bidbar1", "westerconbar1", "showbar1", "fanbar1", "worldconbar1", "probar1", "genbar1", "bookbar1", "linkbar1"]
+    for bar in bars:
+        if filenameZip.startswith("source/"+bar):
+            return None
 
     return filenameZip[7:-4]  # Drop "source/" and ".txt", returning the cleaned name
 
