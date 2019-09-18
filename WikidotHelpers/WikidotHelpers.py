@@ -15,7 +15,8 @@ def CannonicizeString(name):
                             "É" : "E",
                             "ë" : "e",
                             "Ó" : "O",
-                            "è" : "e"}
+                            "è" : "e",
+                            "í" : "i"}
     out = []
     inAlpha = False
     inJunk = False
