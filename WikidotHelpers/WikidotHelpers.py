@@ -45,7 +45,7 @@ def CannonicizeString(name):
 # Take a raw name (mixed case, special characters, a potential category, etc.) and turn it into a properly formatted cannonicized name:
 #       Either "<category>:<name>" or, when there is no category, just "<name>"
 #       In both cases, the <> text is cannonicized
-def Cannonicize(pageNameZip):
+def CannonicizeZipName(pageNameZip):
     if pageNameZip == None:
         return None
     pageName = pageNameZip.lower()
@@ -80,7 +80,7 @@ def AddUncannonicalName(uncanName, canName):
 
 
 # *****************************************************************
-def Uncannonicize(name):
+def UncannonicizeZipName(name):
     n=cannonicalToReal.get(name)
     if n != None:
         return n
@@ -97,7 +97,7 @@ def Uncannonicize(name):
 def IsRedirect(pageText):
     pageText = pageText.strip()  # Remove leading and trailing whitespace
     if pageText.lower().startswith('[[module redirect destination="') and pageText.endswith('"]]'):
-        return Cannonicize(pageText[31:].rstrip('"]'))
+        return CannonicizeZipName(pageText[31:].rstrip('"]'))
     return None
 
 

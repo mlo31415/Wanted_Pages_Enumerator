@@ -84,7 +84,7 @@ for zipEntryName in zipEntryNames:
     redir = WikidotHelpers.IsRedirect(source)
     if redir != None:
         # If so, add it to the redirect dictionary
-        name=WikidotHelpers.Cannonicize(nameZip)
+        name=WikidotHelpers.CannonicizeZipName(nameZip)
         if name == redir:  # Skip circular redirects
             logger("Warning: '" + name + " is a circular redirect reference")
             continue
@@ -114,7 +114,7 @@ missingPages={}     # A dictionary of cannonicized names of pages which are refe
 countContentPages=0
 for zipEntryName in zipEntryNames:
     nameZip=InterestingFilenameZip(zipEntryName)
-    name=WikidotHelpers.Cannonicize(nameZip)
+    name=WikidotHelpers.CannonicizeZipName(nameZip)
     if name == None:
         continue
     if redirects.get(name) != None:  # Skip redirects
@@ -155,7 +155,7 @@ for zipEntryName in zipEntryNames:
             if ref[0].find("http:") > 0:    # We don't want references which are actually outside Wikidot
                 logger("Warning: '" + name + "' contains an empty reference")
                 continue
-            refCan=WikidotHelpers.Cannonicize(ref[0])
+            refCan=WikidotHelpers.CannonicizeZipName(ref[0])
             rawPageRefs.append(refCan)
             WikidotHelpers.AddUncannonicalName(ref[0], refCan)
 
@@ -251,7 +251,7 @@ for crt in countRefTuples:
         continue    # Skip the year entries
     if len(line)>0:
         line=line+", "  # The first entry is not preceded by a comma
-    line=line+"[[["+WikidotHelpers.Uncannonicize(crt[0])+"]]]"
+    line= line +"[[[" + WikidotHelpers.UncannonicizeZipName(crt[0]) + "]]]"
 
 file.close()
 
@@ -282,7 +282,7 @@ for mp in missingPagesTuples:
 
     if len(line)>0:
         line=line+", "
-    line=line+"[[["+WikidotHelpers.Uncannonicize(mp[0])+"]]]"
+    line= line +"[[[" + WikidotHelpers.UncannonicizeZipName(mp[0]) + "]]]"
 
 file.close()
 
@@ -318,7 +318,7 @@ file.close()
 # Print the list of all references
 file=open(day+" Pages.txt", "w")
 for name in existingPages:
-    print(WikidotHelpers.Uncannonicize(name), file=file)
+    print(WikidotHelpers.UncannonicizeZipName(name), file=file)
 file.close()
 
 exit
